@@ -26,8 +26,18 @@ namespace Test\Group;
 
 use OC_Group;
 use OC_User;
+use Test\Traits\UserTrait;
 
+/**
+ * Class LegacyGroupTest
+ *
+ * @group DB
+ *
+ * @package Test\Group
+ */
 class LegacyGroupTest extends \Test\TestCase {
+	use UserTrait;
+
 	protected function setUp() {
 		parent::setUp();
 		OC_Group::clearBackends();
@@ -35,8 +45,6 @@ class LegacyGroupTest extends \Test\TestCase {
 	}
 
 	public function testSingleBackend() {
-		$userBackend = new \Test\Util\User\Dummy();
-		\OC::$server->getUserManager()->registerBackend($userBackend);
 		OC_Group::useBackend(new \Test\Util\Group\Dummy());
 
 		$group1 = $this->getUniqueID();
@@ -46,8 +54,8 @@ class LegacyGroupTest extends \Test\TestCase {
 
 		$user1 = $this->getUniqueID();
 		$user2 = $this->getUniqueID();
-		$userBackend->createUser($user1, '');
-		$userBackend->createUser($user2, '');
+		$this->createUser($user1);
+		$this->createUser($user2);
 
 		$this->assertFalse(OC_Group::inGroup($user1, $group1), 'Asserting that user1 is not in group1');
 		$this->assertFalse(OC_Group::inGroup($user2, $group1), 'Asserting that user2 is not in group1');
@@ -117,8 +125,6 @@ class LegacyGroupTest extends \Test\TestCase {
 
 	public function testUsersInGroup() {
 		OC_Group::useBackend(new \Test\Util\Group\Dummy());
-		$userBackend = new \Test\Util\User\Dummy();
-		\OC::$server->getUserManager()->registerBackend($userBackend);
 
 		$group1 = $this->getUniqueID();
 		$group2 = $this->getUniqueID();
@@ -130,9 +136,9 @@ class LegacyGroupTest extends \Test\TestCase {
 		OC_Group::createGroup($group2);
 		OC_Group::createGroup($group3);
 
-		$userBackend->createUser($user1, '');
-		$userBackend->createUser($user2, '');
-		$userBackend->createUser($user3, '');
+		$this->createUser($user1);
+		$this->createUser($user2);
+		$this->createUser($user3);
 
 		OC_Group::addToGroup($user1, $group1);
 		OC_Group::addToGroup($user2, $group1);
@@ -143,60 +149,5 @@ class LegacyGroupTest extends \Test\TestCase {
 			OC_Group::usersInGroups([$group1, $group2, $group3]));
 
 		// FIXME: needs more parameter variation
-	}
-
-	public function testMultiBackend() {
-		$userBackend = new \Test\Util\User\Dummy();
-		\OC::$server->getUserManager()->registerBackend($userBackend);
-		$backend1 = new \Test\Util\Group\Dummy();
-		$backend2 = new \Test\Util\Group\Dummy();
-		OC_Group::useBackend($backend1);
-		OC_Group::useBackend($backend2);
-
-		$group1 = $this->getUniqueID();
-		$group2 = $this->getUniqueID();
-		OC_Group::createGroup($group1);
-
-		//groups should be added to the first registered backend
-		$this->assertEquals([$group1], $backend1->getGroups());
-		$this->assertEquals([], $backend2->getGroups());
-
-		$this->assertEquals([$group1], OC_Group::getGroups());
-		$this->assertTrue(OC_Group::groupExists($group1));
-		$this->assertFalse(OC_Group::groupExists($group2));
-
-		$backend1->createGroup($group2);
-
-		$this->assertEquals([$group1, $group2], OC_Group::getGroups());
-		$this->assertTrue(OC_Group::groupExists($group1));
-		$this->assertTrue(OC_Group::groupExists($group2));
-
-		$user1 = $this->getUniqueID();
-		$user2 = $this->getUniqueID();
-
-		$userBackend->createUser($user1, '');
-		$userBackend->createUser($user2, '');
-
-		$this->assertFalse(OC_Group::inGroup($user1, $group1));
-		$this->assertFalse(OC_Group::inGroup($user2, $group1));
-
-
-		$this->assertTrue(OC_Group::addToGroup($user1, $group1));
-
-		$this->assertTrue(OC_Group::inGroup($user1, $group1));
-		$this->assertFalse(OC_Group::inGroup($user2, $group1));
-		$this->assertFalse($backend2->inGroup($user1, $group1));
-
-		OC_Group::addToGroup($user1, $group1);
-
-		$this->assertEquals([$user1], OC_Group::usersInGroup($group1));
-
-		$this->assertEquals([$group1], OC_Group::getUserGroups($user1));
-		$this->assertEquals([], OC_Group::getUserGroups($user2));
-
-		OC_Group::deleteGroup($group1);
-		$this->assertEquals([], OC_Group::getUserGroups($user1));
-		$this->assertEquals([], OC_Group::usersInGroup($group1));
-		$this->assertFalse(OC_Group::inGroup($user1, $group1));
 	}
 }

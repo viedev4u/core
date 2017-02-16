@@ -21,12 +21,16 @@
 
 namespace Test\Share;
 
+use Test\Traits\UserTrait;
+
 /**
  * Class Test_Share
  *
  * @group DB
  */
 class ShareTest extends \Test\TestCase {
+
+	use UserTrait;
 
 	protected $itemType;
 	protected $userBackend;
@@ -47,8 +51,6 @@ class ShareTest extends \Test\TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		\OC_User::clearBackends();
-		\OC_User::useBackend('dummy');
 		$this->user1 = $this->getUniqueID('user1_');
 		$this->user2 = $this->getUniqueID('user2_');
 		$this->user3 = $this->getUniqueID('user3_');
@@ -56,13 +58,13 @@ class ShareTest extends \Test\TestCase {
 		$this->user5 = $this->getUniqueID('user5_');
 		$this->user6 = $this->getUniqueID('user6_');
 		$this->groupAndUser = $this->getUniqueID('groupAndUser_');
-		\OC::$server->getUserManager()->createUser($this->user1, 'pass');
-		\OC::$server->getUserManager()->createUser($this->user2, 'pass');
-		\OC::$server->getUserManager()->createUser($this->user3, 'pass');
-		\OC::$server->getUserManager()->createUser($this->user4, 'pass');
-		\OC::$server->getUserManager()->createUser($this->user5, 'pass');
-		\OC::$server->getUserManager()->createUser($this->user6, 'pass'); // no group
-		\OC::$server->getUserManager()->createUser($this->groupAndUser, 'pass');
+		$this->createUser($this->user1, 'pass');
+		$this->createUser($this->user2, 'pass');
+		$this->createUser($this->user3, 'pass');
+		$this->createUser($this->user4, 'pass');
+		$this->createUser($this->user5, 'pass');
+		$this->createUser($this->user6, 'pass'); // no group
+		$this->createUser($this->groupAndUser, 'pass');
 		\OC_User::setUserId($this->user1);
 		\OC_Group::clearBackends();
 		\OC_Group::useBackend(new \Test\Util\Group\Dummy());
