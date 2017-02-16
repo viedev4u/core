@@ -85,7 +85,7 @@ class AppManager implements IAppManager {
 	 * @param ICacheFactory $memCacheFactory
 	 * @param EventDispatcherInterface $dispatcher
 	 */
-	public function __construct(IUserSession $userSession,
+	public function __construct(IUserSession $userSession = null,
 								IAppConfig $appConfig,
 								IGroupManager $groupManager,
 								ICacheFactory $memCacheFactory,
@@ -151,7 +151,7 @@ class AppManager implements IAppManager {
 		if ($this->isAlwaysEnabled($appId)) {
 			return true;
 		}
-		if (is_null($user)) {
+		if (is_null($user) && !is_null($this->userSession)) {
 			$user = $this->userSession->getUser();
 		}
 		$installedApps = $this->getInstalledAppsValues();
