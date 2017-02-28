@@ -48,6 +48,11 @@ class ShareTest extends \Test\TestCase {
 	protected $dateInFuture;
 	protected $dateInPast;
 
+	public function __construct($name = null, array $data = [], $dataName = '') {
+		parent::__construct($name, $data, $dataName);
+		$this->useRealUserManager = true;
+	}
+
 	protected function setUp() {
 		parent::setUp();
 
@@ -387,7 +392,7 @@ class ShareTest extends \Test\TestCase {
 		// Remove user
 		\OC_User::setUserId($this->user1);
 		$user = \OC::$server->getUserManager()->get($this->user1);
-		if ($user !== null) { $user->delete(); }
+		$user->delete();
 		\OC_User::setUserId($this->user2);
 		$this->assertEquals(['test1.txt'], \OCP\Share::getItemsSharedWith('test', Backend::FORMAT_TARGET));
 	}

@@ -84,27 +84,15 @@ abstract class TestCase extends \Test\TestCase {
 
 	/**
 	 * @param string $user
-	 * @param bool $create
-	 * @param bool $password
 	 */
-	protected static function loginHelper($user, $create = false, $password = false) {
-
-		if ($password === false) {
-			$password = $user;
-		}
-
-		if ($create) {
-			\OC::$server->getUserManager()->createUser($user, $password);
-			\OC_Group::createGroup('group');
-			\OC_Group::addToGroup($user, 'group');
-		}
+	protected static function loginHelper($user) {
 
 		self::resetStorage();
 
 		\OC_Util::tearDownFS();
 		\OC::$server->getUserSession()->setUser(null);
 		\OC\Files\Filesystem::tearDown();
-		\OC::$server->getUserSession()->login($user, $password);
+		\OC::$server->getUserSession()->login($user, $user);
 		\OC::$server->getUserFolder($user);
 
 		\OC_Util::setupFS($user);

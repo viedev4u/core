@@ -25,7 +25,6 @@
 namespace Test\Group;
 
 use OC_Group;
-use OC_User;
 use Test\Traits\UserTrait;
 
 /**
@@ -38,10 +37,14 @@ use Test\Traits\UserTrait;
 class LegacyGroupTest extends \Test\TestCase {
 	use UserTrait;
 
+	public function __construct($name = null, array $data = [], $dataName = '') {
+		parent::__construct($name, $data, $dataName);
+		$this->useRealUserManager = true;
+	}
+
 	protected function setUp() {
 		parent::setUp();
 		OC_Group::clearBackends();
-		OC_User::clearBackends();
 	}
 
 	public function testSingleBackend() {
