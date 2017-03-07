@@ -193,7 +193,8 @@ class Server {
 				));
 				$this->server->addPlugin(new CommentPropertiesPlugin(
 					\OC::$server->getCommentsManager(),
-					$userSession
+					$userSession,
+					$userFolder
 				));
 				if (!is_null($view)) {
 					$this->server->addPlugin(new FilesReportPlugin(

@@ -370,6 +370,55 @@ class Manager implements ICommentsManager {
 
 	/**
 	 * @param $objectType string the object type, e.g. 'files'
+	 * @param int[] NodeIDs that may be returned
+	 * @return int[] hash table
+	 * @since 10.0.0
+	 */
+	public function getNumberOfUnreadCommentsForNodes($objectType, $objectIds, IUser $user) {
+		// SELECT C.object_id, COUNT(C.object_id) FROM oc_comments C
+		// 	WHERE C.object_id IN('79', '80', '34', '36', '38', '33') nodes in specific user folder
+		// 	AND C.object_id NOT IN(SELECT C.object_id FROM oc_comments_read_markers CRM
+		// 		WHERE C.object_id = CRM.object_id
+		// 		AND CRM.user_id = 'receiver2'
+		// 		AND CRM.marker_datetime > C.creation_timestamp)
+		// GROUP BY C.object_id;
+		$qbMain = $this->dbConn->getQueryBuilder();
+		$qbSup = $this->dbConn->getQueryBuilder();
+		
+		// Fetch only records from oc_comments which are in specified int[] NodeIDs array and satisfy specified $objectType
+		$qbMain->selectAlias('c.object_id', 'id')->selectAlias($qbMain->createFunction('COUNT(c.object_id)'), 'count')
+			->from('comments', 'c')
+			->where($qbMain->expr()->eq('c.object_type', $qbMain->createParameter('type')))
+			->andWhere($qbMain->expr()->in('c.object_id', $qbMain->createParameter('object_ids')))
+			->setParameter('type', $objectType)
+			->setParameter('object_ids', $objectIds, IQueryBuilder::PARAM_INT_ARRAY);
+
+		// For those found object_id, find all records from oc_comments which are not existing in oc_comments_read_markers or
+		// if matched, its timestamp is lower then the one in oc_comments_read_markers
+		// This query will find all unread comments for user oc_comments_read_markers.user_id $user
+		$qbSup->select('object_id')
+			->from('comments_read_markers', 'crm')
+			->where($qbMain->expr()->eq('crm.user_id', $qbMain->createParameter('crm_user_id')))
+			->andWhere($qbMain->expr()->gt('crm.marker_datetime', 'c.creation_timestamp'))
+			->andWhere($qbMain->expr()->eq('c.object_id', 'crm.object_id'));
+		$qbMain->setParameter('crm_user_id', $user->getUID(), IQueryBuilder::PARAM_STR);
+		$qbMain->andWhere($qbMain->expr()->notIn('c.object_id', $qbMain->createFunction($qbSup->getSQL())));
+
+		// We need groupby for count function
+		$qbMain->groupBy('c.object_id');
+
+		$cursor = $qbMain->execute();
+		
+		while($data = $cursor->fetch()) {
+			$unreadCountsForNodes[$data['id']] = $data['count'];
+		}
+ 		$cursor->closeCursor();
+
+		return $unreadCountsForNodes;
+	}
+
+	/**
+	 * @param $objectType string the object type, e.g. 'files'
 	 * @param $objectId string the id of the object
 	 * @param \DateTime $notOlderThan optional, timestamp of the oldest comments
 	 * that may be returned
