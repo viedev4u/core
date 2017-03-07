@@ -42,6 +42,7 @@ use OC_User;
 use OC_Util;
 use OCA\DAV\Connector\Sabre\Auth;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\Files\NotPermittedException;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
@@ -390,8 +391,15 @@ class Session implements IUserSession, Emitter {
 			//trigger creation of user home and /files folder
 			$userFolder = \OC::$server->getUserFolder($user);
 
-			// copy skeleton
-			\OC_Util::copySkeleton($user, $userFolder);
+			try {
+				// copy skeleton
+				\OC_Util::copySkeleton($user, $userFolder);
+			} catch (NotPermittedException $ex) {
+				// possible if files directory is in an readonly jail
+				\OC::$server->getLogger()->info(
+					'Skeleton not created due to missing write permission'
+				);
+			}
 
 			// trigger any other initialization
 			\OC::$server->getEventDispatcher()->dispatch(IUser::class . '::firstLogin', new GenericEvent($this->getUser()));
