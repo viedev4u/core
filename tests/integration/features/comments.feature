@@ -14,6 +14,22 @@ Feature: comments
     And the response should contain a property "oc:actorDisplayName" with value "user0"
     And the response should contain only "1" comments
 
+  Scenario: Creating a comment on a file belonging to myself
+    Given user "user0" exists
+    Given As an "user0"
+    Given User "user0" uploads file "data/textfile.txt" to "/myFileToComment.txt"
+    When "user0" posts a comment with content "😜" on the file named "/myFileToComment.txt" it should return "201"
+    Then As "user0" load all the comments of the file named "/myFileToComment.txt" it should return "207"
+    And the response should contain a property "oc:parentId" with value "0"
+    And the response should contain a property "oc:childrenCount" with value "0"
+    And the response should contain a property "oc:verb" with value "comment"
+    And the response should contain a property "oc:actorType" with value "users"
+    And the response should contain a property "oc:objectType" with value "files"
+    And the response should contain a property "oc:message" with value "😜"
+    And the response should contain a property "oc:actorDisplayName" with value "user0"
+    And the response should contain only "1" comments
+
+
   Scenario: Creating a comment on a shared file belonging to another user
     Given user "user0" exists
     Given user "user1" exists
