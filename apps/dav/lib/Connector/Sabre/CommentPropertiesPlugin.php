@@ -2,6 +2,7 @@
 /**
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
+ * @author Piotr Mrowczynski <piotr@owncloud.com>
  *
  * @copyright Copyright (c) 2017, ownCloud GmbH
  * @license AGPL-3.0
@@ -49,11 +50,6 @@ class CommentPropertiesPlugin extends ServerPlugin {
 	private $userFolder;
 
 	/**
-	 * @var \OCP\IUser|null Current user
-	 */
-	private $user = null;
-
-	/**
 	 * @var int[]
 	 */
 	private $numberOfCommentsForNodes;
@@ -96,9 +92,6 @@ class CommentPropertiesPlugin extends ServerPlugin {
 			return;
 		}
 
-		// Get user session
-		$this->user = $this->userSession->getUser();
-
 		// Prefetch required data if we know that it is parent node
 		if ($node instanceof \OCA\DAV\Connector\Sabre\Directory
 			&& $propFind->getDepth() !== 0
@@ -124,16 +117,20 @@ class CommentPropertiesPlugin extends ServerPlugin {
 				$this->numberOfCommentsForNodes[$nodeId] = 0;
 			}
 
-			if(!is_null($this->user)){
+			// Get user session
+			$user = $this->userSession->getUser();
+			if(!is_null($user)){
 				// Fetch all unread comments with their nodeIDs
 				$numberOfCommentsForNodes = $this->commentsManager->getNumberOfUnreadCommentsForNodes(
 					'files',
 					$nodeIdsArray,
-					$this->user);
+					$user);
 
-				// Map them to cached hash table
-				foreach($numberOfCommentsForNodes as $nodeID => $numberOfCommentsForNode) {
-					$this->numberOfCommentsForNodes[$nodeID] = intval($numberOfCommentsForNode);
+				if (!is_null($numberOfCommentsForNodes)){
+					// Map them to cached hash table
+					foreach($numberOfCommentsForNodes as $nodeID => $numberOfCommentsForNode) {
+						$this->numberOfCommentsForNodes[$nodeID] = $numberOfCommentsForNode;
+					}
 				}
 			}
 
@@ -178,22 +175,25 @@ class CommentPropertiesPlugin extends ServerPlugin {
 	 * @return Int|null
 	 */
 	public function getUnreadCount(Node $node) {
-		$numberOfCommentsForNode = 0;
+		// Get user session
+		$user = $this->userSession->getUser();
+		$numberOfCommentsForNode = null;
 
 		// Check if it is cached
 		if (isset($this->numberOfCommentsForNodes[$node->getId()])) {
 			$numberOfCommentsForNode = $this->numberOfCommentsForNodes[$node->getId()];
-		} else if(!is_null($this->user)) {
+		} else if(!is_null($user)) {
 			// Fetch all unread comments for this specific NodeID
 			$numberOfCommentsForNodes = $this->commentsManager->getNumberOfUnreadCommentsForNodes(
 				'files',
 				[$node->getId()],
-				$this->user);
+				$user);
 
 			if (isset($numberOfCommentsForNodes[$node->getId()])) {
 				$numberOfCommentsForNode = $numberOfCommentsForNodes[$node->getId()];
 			}
 		}
+		
 		return $numberOfCommentsForNode;
 	}
 }
