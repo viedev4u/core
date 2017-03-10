@@ -71,7 +71,12 @@ class Root extends Folder implements IRootFolder {
 	 * @var \OC\User\User $user
 	 */
 	private $user;
-
+	
+	/**
+	 * @var File|Folder[] $nodeCache 
+	 */
+	private $nodeCache;
+	
 	/**
 	 * @param \OC\Files\Mount\Manager $manager
 	 * @param \OC\Files\View $view
@@ -169,6 +174,18 @@ class Root extends Folder implements IRootFolder {
 		$this->mountManager->remove($mount);
 	}
 
+	/**
+	 * @param string $path
+	 * @throws \OCP\Files\NotFoundException
+	 * @throws \OCP\Files\NotPermittedException
+	 * @return File|Folder
+	 */
+	public function getCached($path) {
+		if (!isset($this->nodeCache[$path])){
+			$this->nodeCache[$path] = $this->get($path);
+		}
+		return $this->nodeCache[$path];
+	}
 	/**
 	 * @param string $path
 	 * @throws \OCP\Files\NotFoundException

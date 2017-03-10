@@ -89,8 +89,13 @@ class Folder extends Node implements \OCP\Files\Folder {
 	 * @throws \OCP\Files\NotFoundException
 	 * @return Node[]
 	 */
-	public function getDirectoryListing() {
-		$folderContent = $this->view->getDirectoryContent($this->path);
+	public function getDirectoryListing($cached = false) {
+		if ($cached) {
+			// Folder will try to obtain entry from cache
+			$folderContent = $this->view->getDirectoryContentFromCache($this->path);
+		} else {
+			$folderContent = $this->view->getDirectoryContent($this->path);
+		}
 
 		return array_map(function(FileInfo $info) {
 			if ($info->getMimetype() === 'httpd/unix-directory') {
@@ -126,8 +131,12 @@ class Folder extends Node implements \OCP\Files\Folder {
 	 * @return \OC\Files\Node\Node
 	 * @throws \OCP\Files\NotFoundException
 	 */
-	public function get($path) {
-		return $this->root->get($this->getFullPath($path));
+	public function get($path, $cached = false) {
+		if ($cached) {
+			return $this->root->getCached($this->getFullPath($path));
+		} else {
+			return $this->root->get($this->getFullPath($path));
+		}
 	}
 
 	/**

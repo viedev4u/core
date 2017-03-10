@@ -168,8 +168,8 @@ class SharesPlugin extends \Sabre\DAV\ServerPlugin {
 			&& $propFind->getDepth() !== 0
 			&& !is_null($propFind->getStatus(self::SHARETYPES_PROPERTYNAME))
 		) {
-			$folderNode = $this->userFolder->get($sabreNode->getPath());
-			$children = $folderNode->getDirectoryListing();
+			$folderNode = $this->userFolder->get($sabreNode->getPath(), true);
+			$children = $folderNode->getDirectoryListing(true);
 
 			// Get ID of parent folder
 			$folderNodeID = intval($folderNode->getId());

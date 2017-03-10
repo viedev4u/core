@@ -93,6 +93,8 @@ class View {
 
 	private $userManager;
 
+	private $directoryContentsCache;
+	
 	/**
 	 * @param string $root
 	 * @throws \Exception If $root contains an invalid path
@@ -1379,13 +1381,27 @@ class View {
 	}
 
 	/**
+	 * get the content of a directory from cache
+	 *
+	 * @param string $directory path under datadirectory
+	 * @param string $mimetype_filter limit returned content to this mimetype or mimepart
+	 * @return FileInfo[]
+	 */
+	public function getDirectoryContentFromCache($directory, $mimetype_filter = '') {
+		if (!isset($this->directoryContentsCache[$directory])) {
+			$this->directoryContentsCache[$directory] = $this->getDirectoryContent($directory, $mimetype_filter);
+		}
+		return $this->directoryContentsCache[$directory];
+	}
+
+	/**
 	 * get the content of a directory
 	 *
 	 * @param string $directory path under datadirectory
 	 * @param string $mimetype_filter limit returned content to this mimetype or mimepart
 	 * @return FileInfo[]
 	 */
-	public function getDirectoryContent($directory, $mimetype_filter = '') {
+	public function getDirectoryContent($directory, $mimetype_filter = '') {		
 		$this->assertPathLength($directory);
 		if (!Filesystem::isValidPath($directory)) {
 			return [];
