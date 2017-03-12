@@ -52,6 +52,32 @@ class RootTest extends \Test\TestCase {
 	}
 
 	/**
+	 * We expect that calling getCached('/bar/foo') twice will only invoke getFileInfo once (will get it from cache)
+	 */
+	public function testGetCached() {
+		$manager = new Manager();
+		$storage = $this->createMock('\OC\Files\Storage\Storage');
+		$view = $this->createMock('\OC\Files\View');
+		$root = new \OC\Files\Node\Root($manager, $view, $this->user);
+
+		// Do ->get() twice and expect getFIleInfo only once
+		$view->expects($this->once())
+			->method('getFileInfo')
+			->with('/bar/foo')
+			->will($this->returnValue($this->getFileInfo(['fileid' => 10, 'path' => 'bar/foo', 'name', 'mimetype' => 'text/plain'])));
+
+		$root->mount($storage, '');
+
+		$node = $root->getCached('/bar/foo');
+		$this->assertEquals(10, $node->getId());
+		$this->assertInstanceOf('\OC\Files\Node\File', $node);
+
+		$node = $root->getCached('/bar/foo');
+		$this->assertEquals(10, $node->getId());
+		$this->assertInstanceOf('\OC\Files\Node\File', $node);
+	}
+
+	/**
 	 * @expectedException \OCP\Files\NotFoundException
 	 */
 	public function testGetNotFound() {

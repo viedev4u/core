@@ -393,12 +393,11 @@ class Manager implements ICommentsManager {
 		$unreadCountsForNodes = array();
 		$objectIdChunks = array_chunk($objectIds, 100);
 		foreach ($objectIdChunks as $objectIdChunk) {
-
 			// Fetch only records from oc_comments which are in specified int[] NodeIDs array and satisfy specified $objectType
-			$qbMain->selectAlias('c.object_id', 'id')->selectAlias($qbMain->createFunction('COUNT(c.object_id)'), 'count')
+			$qbMain->selectAlias('object_id', 'id')->selectAlias($qbMain->createFunction('COUNT(`object_id`)'), 'count')
 				->from('comments', 'c')
-				->where($qbMain->expr()->eq('c.object_type', $qbMain->createParameter('type')))
-				->andWhere($qbMain->expr()->in('c.object_id', $qbMain->createParameter('object_ids')))
+				->where($qbMain->expr()->eq('object_type', $qbMain->createParameter('type')))
+				->andWhere($qbMain->expr()->in('object_id', $qbMain->createParameter('object_ids')))
 				->setParameter('type', $objectType)
 				->setParameter('object_ids', $objectIdChunk, IQueryBuilder::PARAM_INT_ARRAY);
 
@@ -411,10 +410,10 @@ class Manager implements ICommentsManager {
 				->andWhere($qbMain->expr()->gte('crm.marker_datetime', 'c.creation_timestamp'))
 				->andWhere($qbMain->expr()->eq('c.object_id', 'crm.object_id'));
 			$qbMain->setParameter('crm_user_id', $user->getUID(), IQueryBuilder::PARAM_STR);
-			$qbMain->andWhere($qbMain->expr()->notIn('c.object_id', $qbMain->createFunction($qbSup->getSQL())));
+			$qbMain->andWhere($qbMain->expr()->notIn('object_id', $qbMain->createFunction($qbSup->getSQL())));
 
 			// We need groupby for count function
-			$qbMain->groupBy('c.object_id');
+			$qbMain->groupBy('object_id');
 
 			$cursor = $qbMain->execute();
 

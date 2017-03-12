@@ -324,6 +324,7 @@ class ManagerTest extends TestCase {
 			$this->addDatabaseEntry(0, 0, $commentsTimeStamp, $commentsTimeStamp, 'piotr', '36');
 		}
 		$this->addDatabaseEntry(0, 0, $commentsTimeStamp, $commentsTimeStamp, 'piotr', '40');
+		$this->addDatabaseEntry(0, 0, $commentsTimeStamp, $commentsTimeStamp, 'piotr', '40');
 		$this->addDatabaseEntry(0, 0, $commentsTimeStamp, $commentsTimeStamp, 'piotr', '20');
 		$this->addDatabaseEntry(0, 0, $commentsTimeStamp, $commentsTimeStamp, 'artur', '21');
 		$this->addDatabaseEntry(0, 0, $commentsTimeStamp, $commentsTimeStamp, 'artur', '15');
@@ -339,14 +340,16 @@ class ManagerTest extends TestCase {
 
 		$expectedHashMap = array();
 		$expectedHashMap['36'] = 200;
-		$amount = $manager->getNumberOfUnreadCommentsForNodes('files', ['36','80','25'], $user2);
+		$expectedHashMap['40'] = 2;
+		$amount = $manager->getNumberOfUnreadCommentsForNodes('files', ['36','40', '80','25'], $user2);
 		$this->assertSame($amount, $expectedHashMap);
 
 		// Karolina now read the comments from piotr day later
 		$commentsTimeStamp1 = new \DateTime('2017-03-02 15:00:00 EDT');
 		$manager->setReadMark('files', '36', $commentsTimeStamp1, $user2);
+		$manager->setReadMark('files', '40', $commentsTimeStamp1, $user2);
 		$expectedHashMap = array();
-		$amount = $manager->getNumberOfUnreadCommentsForNodes('files', ['36','80','25'], $user2);
+		$amount = $manager->getNumberOfUnreadCommentsForNodes('files', ['36','40','80','25'], $user2);
 		$this->assertSame($amount, $expectedHashMap);
 
 		// Karolina added another comment to piotr after that, so piotr will have one unread comment

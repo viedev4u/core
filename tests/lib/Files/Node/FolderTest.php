@@ -64,6 +64,41 @@ class FolderTest extends NodeTest {
 		$this->assertEquals(3, $children[1]->getId());
 	}
 
+	public function testGetCachedDirectoryContent() {
+		$manager = $this->createMock('\OC\Files\Mount\Manager');
+		/**
+		 * @var \OC\Files\View | \PHPUnit_Framework_MockObject_MockObject $view
+		 */
+		$view = $this->createMock('\OC\Files\View');
+		$root = $this->getMockBuilder('\OC\Files\Node\Root')
+			->setConstructorArgs([$manager, $view, $this->user])
+			->getMock();
+		$root->expects($this->any())
+			->method('getUser')
+			->will($this->returnValue($this->user));
+
+		$view->expects($this->never())
+			->method('getDirectoryContent');
+
+		$view->expects($this->once())
+			->method('getDirectoryContentFromCache')
+			->with('/bar/foo')
+			->will($this->returnValue([
+				new FileInfo('/bar/foo/asd', null, 'foo/asd', ['fileid' => 2, 'path' => '/bar/foo/asd', 'name' => 'asd', 'size' => 100, 'mtime' => 50, 'mimetype' => 'text/plain'], null),
+				new FileInfo('/bar/foo/qwerty', null, 'foo/qwerty', ['fileid' => 3, 'path' => '/bar/foo/qwerty', 'name' => 'qwerty', 'size' => 200, 'mtime' => 55, 'mimetype' => 'httpd/unix-directory'], null)
+			]));
+
+		$node = new Folder($root, $view, '/bar/foo');
+		$children = $node->getDirectoryListing(true);
+		$this->assertEquals(2, count($children));
+		$this->assertInstanceOf('\OC\Files\Node\File', $children[0]);
+		$this->assertInstanceOf('\OC\Files\Node\Folder', $children[1]);
+		$this->assertEquals('asd', $children[0]->getName());
+		$this->assertEquals('qwerty', $children[1]->getName());
+		$this->assertEquals(2, $children[0]->getId());
+		$this->assertEquals(3, $children[1]->getId());
+	}
+
 	public function testGet() {
 		$manager = $this->createMock('\OC\Files\Mount\Manager');
 		/**
@@ -83,6 +118,30 @@ class FolderTest extends NodeTest {
 
 		$node = new Folder($root, $view, '/bar/foo');
 		$node->get('asd');
+	}
+
+	public function testGetCached() {
+		$manager = $this->createMock('\OC\Files\Mount\Manager');
+		/**
+		 * @var \OC\Files\View | \PHPUnit_Framework_MockObject_MockObject $view
+		 */
+		$view = $this->createMock('\OC\Files\View');
+		$root = $this->getMockBuilder('\OC\Files\Node\Root')
+			->setConstructorArgs([$manager, $view, $this->user])
+			->getMock();
+		$root->expects($this->any())
+			->method('getUser')
+			->will($this->returnValue($this->user));
+
+		$root->expects($this->never())
+			->method('get');
+
+		$root->expects($this->once())
+			->method('getCached')
+			->with('/bar/foo/asd');
+
+		$node = new Folder($root, $view, '/bar/foo');
+		$node->get('asd', true);
 	}
 
 	public function testNodeExists() {

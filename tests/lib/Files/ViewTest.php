@@ -2433,6 +2433,30 @@ class ViewTest extends TestCase {
 		];
 	}
 
+	public function testGetCachedDirectoryContent() {
+		$storage1 = new Temporary();
+		$root = $this->getUniqueID('/');
+		Filesystem::mount($storage1, [], $root . '/');
+		$view = new View($root);
+
+		$view->file_put_contents('test1.txt', 'asd');
+		$view->file_put_contents('test2.txt', 'asd');
+		$view->file_put_contents('test3.md', 'asd');
+		$view->file_put_contents('test4.png', '');
+
+		$files1 = array_map(function (FileInfo $info) {
+			return $info->getName();
+		}, $view->getDirectoryContentFromCache(''));
+		sort($files1);
+		$files2 = array_map(function (FileInfo $info) {
+			return $info->getName();
+		}, $view->getDirectoryContentFromCache(''));
+		sort($files2);
+
+		$expected = ['test1.txt', 'test2.txt', 'test3.md', 'test4.png'];
+		$this->assertEquals($expected, $files1, $files2);
+	}
+
 	/**
 	 * @param string $filter
 	 * @param string[] $expected
