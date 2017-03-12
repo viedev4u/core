@@ -125,10 +125,9 @@ class ServerFactory {
 		$server->on('beforeMethod', function () use ($server, $objectTree, $viewCallBack) {
 			// ensure the skeleton is copied
 			$userFolder = \OC::$server->getUserFolder();
-			
+			$rootInfo = $userFolder->getFileInfo();
 			/** @var \OC\Files\View $view */
 			$view = $viewCallBack($server);
-			$rootInfo = $view->getFileInfo('');
 
 			// Create ownCloud Dir
 			if ($rootInfo->getType() === 'dir') {
